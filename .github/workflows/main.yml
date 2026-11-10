@@ -25,10 +25,11 @@ jobs:
           --health-retries 12
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install and lint JavaScript
+      - name: Install and Run Linter
         run: |
           npm install --no-save eslint@8 eslint-config-standard@17 eslint-plugin-import@2 eslint-plugin-n@16 eslint-plugin-promise@6
           npx eslint secondChance-backend/{app.js,logger.js,models/db.js,routes,middleware,util/import-mongo/index.js} sentiment/index.js secondChanceWebsite/index.js
