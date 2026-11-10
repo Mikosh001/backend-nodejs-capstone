@@ -68,9 +68,10 @@ spec:
                   name: secondchance-capstone-runtime
                   key: MONGO_INITDB_ROOT_PASSWORD
           readinessProbe:
-            exec:
-              command: ["mongosh", "--quiet", "--eval", "db.adminCommand({ping: 1})"]
+            tcpSocket:
+              port: 27017
             periodSeconds: 5
+            timeoutSeconds: 3
           volumeMounts:
             - name: datadir
               mountPath: /data/db
