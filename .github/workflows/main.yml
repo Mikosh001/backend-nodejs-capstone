@@ -16,6 +16,9 @@ jobs:
         ports:
           - 27017:27017
         options: >-
+          --log-driver json-file
+          --log-opt max-size=4k
+          --log-opt max-file=1
           --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})'"
           --health-interval 5s
           --health-timeout 5s
@@ -50,5 +53,5 @@ jobs:
           CI: 'false'
       - name: Build application containers
         run: |
-          docker build -t secondchance-backend ./secondChance-backend
-          docker build -t secondchance-website -f secondChanceWebsite/Dockerfile .
+          docker build --quiet -t secondchance-backend ./secondChance-backend
+          docker build --quiet -t secondchance-website -f secondChanceWebsite/Dockerfile .
