@@ -10,6 +10,16 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +34,14 @@ jobs:
           npm ci --prefix secondChance-backend
           npm ci --prefix sentiment
           npm ci --prefix secondChanceWebsite
+      - name: Import and verify 16 MongoDB documents
+        env:
+          MONGO_URL: mongodb://127.0.0.1:27017
+          MONGO_DB: secondChance
+        run: |
+          npm start --prefix secondChance-backend/util/import-mongo | tee /tmp/secondchance-import.log
+          grep -Fx 'Inserted documents: 16' /tmp/secondchance-import.log
+          node -e 'const { MongoClient } = require("./secondChance-backend/node_modules/mongodb"); (async () => { const client = new MongoClient(process.env.MONGO_URL); try { await client.connect(); const count = await client.db(process.env.MONGO_DB).collection("secondChanceItems").countDocuments(); require("node:assert/strict").equal(count, 16); console.log(`Verified ${count} documents in secondChance.secondChanceItems`); } finally { await client.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });'
       - name: Build the React client
         run: |
           npm ci --legacy-peer-deps --prefix secondChance-frontend
