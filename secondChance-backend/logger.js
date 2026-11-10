@@ -1,18 +1,12 @@
-const pino = require('pino');
+const pino = require('pino')
 
-let logger;
-
-if (process.env.NODE_ENV !== 'production') {
-    // In non-production environments, log to the console
-    logger = pino({
-        level: 'debug',
-        transport: {
-            target: "pino-pretty",
-        },
-    });
-} else {
-    // production
-    logger = pino();
+const options = {
+  redact: ['req.headers.authorization', 'req.headers.cookie']
 }
 
-module.exports = logger;
+if (process.env.NODE_ENV !== 'production') {
+  options.level = 'debug'
+  options.transport = { target: 'pino-pretty' }
+}
+
+module.exports = pino(options)

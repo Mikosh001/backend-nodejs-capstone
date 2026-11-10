@@ -1,42 +1,34 @@
-const express = require('express');
-const router = express.Router();
-const connectToDatabase = require('../models/db');
+const express = require('express')
+const connectToDatabase = require('../models/db')
 
-// Search for gifts
+const router = express.Router()
+
 router.get('/', async (req, res, next) => {
-    try {
-        // Task 1: Connect to MongoDB using connectToDatabase database. Remember to use the await keyword and store the connection in `db`
-        // {{insert code here}}
-
-        const collection = db.collection("gifts");
-
-        // Initialize the query object
-        let query = {};
-
-        // Add the name filter to the query if the name parameter is not empty
-        // if (/* {{insert code here}} */) {
-            query.name = { $regex: req.query.name, $options: "i" }; // Using regex for partial match, case-insensitive
-        // }
-
-        // Task 3: Add other filters to the query
-        if (req.query.category) {
-            // {{insert code here}}
-        }
-        if (req.query.condition) {
-            // {{insert code here}} 
-        }
-        if (req.query.age_years) {
-            // {{insert code here}}
-            query.age_years = { $lte: parseInt(req.query.age_years) };
-        }
-
-        // Task 4: Fetch filtered gifts using the find(query) method. Make sure to use await and store the result in the `gifts` constant
-        // {{insert code here here}}
-
-        res.json(gifts);
-    } catch (e) {
-        next(e);
+  try {
+    const { name, category, condition, age_years: age } = req.query
+    if ([name, category, condition, age].some(value => value !== undefined && typeof value !== 'string')) {
+      return res.status(400).json({ error: 'Search filters must be strings' })
     }
-});
+    const query = {}
+    if (name?.trim()) {
+      const escaped = name.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      query.name = { $regex: escaped, $options: 'i' }
+    }
+    if (category?.trim()) query.category = category.trim()
+    if (condition?.trim()) query.condition = condition.trim()
+    if (age?.trim()) {
+      const years = Number(age)
+      if (!Number.isFinite(years) || years < 0) {
+        return res.status(400).json({ error: 'age_years must be a non-negative number' })
+      }
+      query.age_years = { $lte: years }
+    }
+    const db = await connectToDatabase()
+    const gifts = await db.collection('secondChanceItems').find(query).toArray()
+    return res.json(gifts)
+  } catch (error) {
+    next(error)
+  }
+})
 
-module.exports = router;
+module.exports = router

@@ -1,0 +1,36 @@
+name: SecondChance CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install and lint JavaScript
+        run: |
+          npm install --no-save eslint@8 eslint-config-standard@17 eslint-plugin-import@2 eslint-plugin-n@16 eslint-plugin-promise@6
+          npx eslint secondChance-backend/{app.js,logger.js,models/db.js,routes,middleware,util/import-mongo/index.js} sentiment/index.js secondChanceWebsite/index.js
+      - name: Install service dependencies
+        run: |
+          npm ci --prefix secondChance-backend
+          npm ci --prefix sentiment
+          npm ci --prefix secondChanceWebsite
+      - name: Build the React client
+        run: |
+          npm ci --legacy-peer-deps --prefix secondChance-frontend
+          npm run build --prefix secondChance-frontend
+        env:
+          CI: 'false'
+      - name: Build application containers
+        run: |
+          docker build -t secondchance-backend ./secondChance-backend
+          docker build -t secondchance-website -f secondChanceWebsite/Dockerfile .

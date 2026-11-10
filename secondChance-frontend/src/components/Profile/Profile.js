@@ -77,6 +77,8 @@ const handleSubmit = async (e) => {
     if (response.ok) {
       // Update the user details in session storage
       sessionStorage.setItem("name", updatedDetails.name);
+      const result = await response.json();
+      sessionStorage.setItem("auth-token", result.authtoken);
       setUserDetails(updatedDetails);
       setEditMode(false);
       setUserName(updatedDetails.name);

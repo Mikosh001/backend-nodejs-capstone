@@ -25,7 +25,7 @@ function ItemPage() {
       // Get the form data
       const formData = new FormData();
       const file = document.getElementById('file').files[0];
-      formData.append('file', file);
+      if (file) formData.append("file", file);
       formData.append('name', document.getElementById('name').value);
       formData.append('category', category);
       formData.append('condition', condition);
@@ -34,7 +34,6 @@ function ItemPage() {
       formData.append('age_days', age_days);
       formData.append('age_years', (age_days/365).toFixed(2));
       formData.append('description', document.getElementById('description').value);
-      formData.append('image', `/images/${file.name}`);
       formData.append('comments', []);
 
           try {
@@ -42,6 +41,7 @@ function ItemPage() {
             console.log(url);
               const response = await fetch(url, {
                 method: 'POST',
+                headers: { Authorization: `Bearer ${sessionStorage.getItem("auth-token")}` },
                 body: formData
             });
     
